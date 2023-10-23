@@ -68,19 +68,25 @@ func (test *TestSuite) TestMonad_BivariateFunction() {
 		return i, nil
 	}
 
-	// currying to match throwable type definition
+	// manually currying to match unaryThrower type definition
 	sum := func(i int) func(j int) (int, error) {
 		return func(j int) (int, error) {
 			return i + j, nil
 		}
 	}
 
+	// normal implementation, easier to use
+	sumNormal := func(i, j int) (int, error) {
+		return i + j, nil
+	}
+
 	a := Bind(Wrap(1), identity)
 	b := Bind(a, sum(2))
+	c := Bind(b, Curry(sumNormal, 2))
 
-	value, err := Unwrap(b)
+	value, err := Unwrap(c)
 	assert.Nil(test.T(), err)
-	assert.Equal(test.T(), 3, value)
+	assert.Equal(test.T(), 5, value)
 }
 
 // TestMonad_ComplexType tests using the monad using a non-primary complex type
@@ -110,3 +116,40 @@ func (test *TestSuite) TestMonad_ComplexType() {
 	assert.Nil(test.T(), err)
 	assert.Equal(test.T(), "Roy", value)
 }
+
+// todo make a proper example using methods, chain of some methods where normally you would have error handling in between
+// todo is there ever a case for nullary functions where a monad is nice? not really? you could just wrap with the error en join the monad from there? make unit test to proof this works
+
+//type person struct {
+//	name string
+//	age  int
+//}
+//
+//type exam struct {
+//	p     person
+//	score int
+//}
+//
+//func (t exam) setScore(p person) (exam, error) {
+//	return exam{
+//		p:     p,
+//		score: 0,
+//	}, nil
+//}
+//
+//func (t exam) getScore(p person)
+//
+//func (test *TestSuite) TestMonad_Method() {
+//	p := person{
+//		name: "Roy",
+//		age:  30,
+//	}
+//
+//	t := exam{}
+//
+//	a := Bind(Wrap(p), t.setScore)
+//
+//	value, err := Unwrap(b)
+//	assert.Nil(test.T(), err)
+//	assert.Equal(test.T(), "Roy", value)
+//}

@@ -3,19 +3,35 @@ package Monad
 
 type unaryThrower[T, U any] func(input T) (U, error)
 
-type WithError[T any] struct {
-	Value T
-	Err   error
+type WithError[T any] interface {
+	Value() T
+	Error() error
+	private()
 }
+
+type withError[T any] struct {
+	value T
+	err   error
+}
+
+func (w withError[T]) Value() T {
+	return w.value
+}
+
+func (w withError[T]) Error() error {
+	return w.err
+}
+
+func (w withError[T]) private() {}
 
 // Wrap convert generic value to a wrapped version usable in the monad
 func Wrap[T any](value T) WithError[T] {
-	return WithError[T]{Value: value, Err: nil}
+	return withError[T]{value: value, err: nil}
 }
 
 // Unwrap unwraps the wrapped value to the value and error
 func Unwrap[T any](we WithError[T]) (interface{}, error) {
-	return we.Value, we.Err
+	return we.Value(), we.Error()
 }
 
 // Curry transform a binary function to a curried unary function (T, U) => (V, error) into (T) => (U) => (V, error)
@@ -28,10 +44,10 @@ func Curry[T, U, V any](i T, fn func(i T, j U) (V, error)) func(i U) (V, error) 
 
 // Bind operates fn on inner value of wrapped input if error equals nil, else return err and default value for U
 func Bind[T, U any](we WithError[T], fn unaryThrower[T, U]) WithError[U] {
-	if we.Err != nil {
-		return WithError[U]{Err: we.Err}
+	if we.Error() != nil {
+		return withError[U]{err: we.Error()}
 	}
 
-	value, newErr := fn(we.Value)
-	return WithError[U]{Value: value, Err: newErr}
+	value, newErr := fn(we.Value())
+	return withError[U]{value: value, err: newErr}
 }

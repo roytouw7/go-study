@@ -171,12 +171,12 @@ func (test *TestSuite) TestMonad_RealLifeExample_WithMonad() {
 	policies := Bind(hotel, Curry(nil, hotelService.GetGuaranteePolicies))
 	webpages := Bind(hotel, Curry(nil, hotelService.GetWebpagesForHotel))
 
-	if webpages.Err != nil { // todo not a fan of this, appears we only check webpages error now
+	if webpages.Error() != nil { // todo not a fan of this, appears we only check webpages error now
 		return // return error	// benefit might be bigger if the error handling is more than just a return err
 	}
 
-	test.Equal(policies.Value.policy, fmt.Sprintf("Policy for hotel %s", hotel.Value.uuid))
-	test.Equal(webpages.Value.page, fmt.Sprintf("Page for hotel %s", hotel.Value.uuid))
+	test.Equal(policies.Value().policy, fmt.Sprintf("Policy for hotel %s", hotel.Value().uuid))
+	test.Equal(webpages.Value().page, fmt.Sprintf("Page for hotel %s", hotel.Value().uuid))
 }
 
 // todo is there ever a case for nullary functions where a monad is nice? not really? you could just wrap with the error en join the monad from there? make unit test to proof this works
